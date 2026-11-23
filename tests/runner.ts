@@ -1,3 +1,7 @@
+import * as dotenv from 'dotenv';
+dotenv.config();
+dotenv.config({ path: '.env.local' });
+
 import { mockPartnerServer } from './helpers/mock-partner-server';
 import { httpClient } from './helpers/http-client';
 import { dbHelpers } from './helpers/db-helpers';
