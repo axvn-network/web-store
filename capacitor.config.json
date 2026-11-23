@@ -1,0 +1,15 @@
+{
+  "appId": "com.betashop.webstore",
+  "appName": "BetaShop",
+  "webDir": "public",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://web-store.vercel.app",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  }
+}

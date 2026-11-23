@@ -8,12 +8,19 @@ import {
   BiSort, 
   BiChevronRight, 
   BiX, 
-  BiHomeAlt 
+  BiHomeAlt,
+  BiGridAlt,
+  BiListUl,
+  BiStar,
+  BiCart
 } from 'react-icons/bi';
 import { STORE_PRODUCTS, STORE_CATEGORIES, Product } from '@/data/storeData';
 import ProductCard from '@/components/store/ProductCard';
+import { formatVND } from '@/lib/utils';
+import { useCart } from '@/lib/cartStore';
 
 function ProductsContent() {
+  const { addToCart } = useCart();
   const searchParams = useSearchParams();
   const initialCategory = searchParams.get('danh-muc') || 'all';
   const initialSearch = searchParams.get('search') || '';
@@ -22,7 +29,9 @@ function ProductsContent() {
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
   const [selectedBrand, setSelectedBrand] = useState<string>('all');
   const [priceRange, setPriceRange] = useState<string>('all');
+  const [minRating, setMinRating] = useState<number>(0);
   const [sortBy, setSortBy] = useState<string>('default');
+  const [viewMode, setViewMode] = useState<'grid' | 'flow'>('grid');
   const [mobileFilterOpen, setMobileFilterOpen] = useState<boolean>(false);
 
   const cleanCategory = (slug?: string) => (slug || '').replace(/^\//, '').replace(/^danh-muc\//, '');
@@ -64,6 +73,9 @@ function ProductsContent() {
       if (initialFilter === 'trending' && !product.isTrending) return false;
       if (initialFilter === 'hang-moi' && !product.isNew) return false;
 
+      // Rating filter
+      if (minRating > 0 && product.rating < minRating) return false;
+
       // Price filter
       if (priceRange === 'under-100k' && product.price >= 100000) return false;
       if (priceRange === '100k-500k' && (product.price < 100000 || product.price > 500000)) return false;
@@ -82,12 +94,13 @@ function ProductsContent() {
       if (sortBy === 'rating') return b.rating - a.rating;
       return 0;
     });
-  }, [selectedCategory, selectedBrand, priceRange, sortBy, initialSearch, initialFilter]);
+  }, [selectedCategory, selectedBrand, priceRange, minRating, sortBy, initialSearch, initialFilter]);
 
   const clearAllFilters = () => {
     setSelectedCategory('all');
     setSelectedBrand('all');
     setPriceRange('all');
+    setMinRating(0);
     setSortBy('default');
   };
 
@@ -220,6 +233,37 @@ function ProductsContent() {
               ))}
             </div>
           </div>
+
+          {/* Rating Filter */}
+          <div className="border-t border-gray-100 pt-4">
+            <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-2.5">
+              Đánh giá sao
+            </h4>
+            <div className="space-y-1.5 text-xs">
+              {[
+                { label: 'Tất cả đánh giá', val: 0 },
+                { label: 'Từ 4.0 sao trở lên', val: 4 },
+                { label: '5.0 sao tuyệt đối', val: 5 },
+              ].map((r) => (
+                <button
+                  key={r.val}
+                  type="button"
+                  onClick={() => setMinRating(r.val)}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg transition ${
+                    minRating === r.val
+                      ? 'bg-orange-50 text-orange-600 font-bold border border-orange-200'
+                      : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="flex items-center gap-1">
+                    <BiStar className="text-amber-400 text-sm" />
+                    <span>{r.label}</span>
+                  </span>
+                  {minRating === r.val && <span className="text-[10px] font-bold">✓</span>}
+                </button>
+              ))}
+            </div>
+          </div>
         </aside>
 
         {/* Products Listing Area */}
@@ -248,6 +292,34 @@ function ProductsContent() {
                 <BiFilterAlt className="text-base" />
                 <span>Bộ lọc ({selectedCategory !== 'all' || priceRange !== 'all' || selectedBrand !== 'all' ? '1+' : '0'})</span>
               </button>
+
+              {/* View Mode Toggle (Grid vs Flow/List) */}
+              <div className="flex items-center bg-gray-100 p-0.5 rounded-lg border border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('grid')}
+                  className={`p-1.5 rounded-md transition ${
+                    viewMode === 'grid'
+                      ? 'bg-white text-orange-600 shadow-xs font-bold'
+                      : 'text-gray-400 hover:text-gray-700'
+                  }`}
+                  title="Dạng lưới (Grid View)"
+                >
+                  <BiGridAlt className="text-base" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('flow')}
+                  className={`p-1.5 rounded-md transition ${
+                    viewMode === 'flow'
+                      ? 'bg-white text-orange-600 shadow-xs font-bold'
+                      : 'text-gray-400 hover:text-gray-700'
+                  }`}
+                  title="Dạng danh sách chi tiết (Flow View)"
+                >
+                  <BiListUl className="text-base" />
+                </button>
+              </div>
 
               {/* Sort Selector */}
               <div className="flex items-center gap-1 text-xs">
@@ -289,13 +361,106 @@ function ProductsContent() {
             </div>
           )}
 
-          {/* Product Grid */}
+          {/* Products Presentation (Grid View vs Flow/List View) */}
           {filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
-              {filteredProducts.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
+            viewMode === 'grid' ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
+                {filteredProducts.map((p) => (
+                  <ProductCard key={p.id} product={p} />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredProducts.map((p) => (
+                  <div
+                    key={p.id}
+                    className="bg-white rounded-2xl p-3.5 sm:p-4 border border-gray-100 hover:border-orange-200 transition shadow-xs hover:shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                  >
+                    <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                      <Link href={`/san-pham/${p.slug || p.id}`} className="shrink-0 relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
+                        <img
+                          src={p.image || '/product1.webp'}
+                          alt={p.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition"
+                          loading="lazy"
+                        />
+                        {p.discount && (
+                          <span className="absolute top-1 left-1 bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-md">
+                            -{p.discount}%
+                          </span>
+                        )}
+                      </Link>
+
+                      <div className="space-y-1 min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full border border-orange-100">
+                            {p.brand || 'Chính Hãng'}
+                          </span>
+                          {p.isFlashSale && (
+                            <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                              ⚡ Flash Sale
+                            </span>
+                          )}
+                          <span className="text-[11px] text-gray-400">
+                            Kho: <strong className="text-gray-700 font-bold">{p.stock}</strong>
+                          </span>
+                        </div>
+
+                        <Link
+                          href={`/san-pham/${p.slug || p.id}`}
+                          className="block font-bold text-gray-900 text-sm sm:text-base hover:text-orange-600 transition truncate"
+                          title={p.title}
+                        >
+                          {p.title}
+                        </Link>
+
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <span className="flex items-center gap-0.5 text-amber-500 font-bold">
+                            <BiStar className="text-sm fill-amber-400" />
+                            <span>{p.rating || '5.0'}</span>
+                          </span>
+                          <span>•</span>
+                          <span>Đã bán: <strong className="text-gray-800 font-semibold">{p.sold}</strong></span>
+                          <span>•</span>
+                          <span className="text-emerald-600 font-medium">Bảo hành 12 tháng</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 gap-2 shrink-0">
+                      <div className="text-left sm:text-right">
+                        <div className="text-base sm:text-lg font-black text-[#f53d2d]">
+                          {formatVND(p.price)}
+                        </div>
+                        {p.originalPrice && p.originalPrice > p.price && (
+                          <div className="text-xs text-gray-400 line-through">
+                            {formatVND(p.originalPrice)}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => addToCart(p, 1)}
+                          className="p-2 sm:px-3 sm:py-2 bg-orange-50 hover:bg-orange-100 text-orange-600 rounded-xl text-xs font-bold transition flex items-center gap-1 active:scale-95"
+                          title="Thêm vào giỏ hàng"
+                        >
+                          <BiCart className="text-base" />
+                          <span className="hidden sm:inline">Thêm giỏ</span>
+                        </button>
+                        <Link
+                          href={`/san-pham/${p.slug || p.id}`}
+                          className="px-3.5 py-2 bg-[#f53d2d] hover:bg-[#e03122] text-white rounded-xl text-xs font-bold transition shadow-xs active:scale-95 shrink-0"
+                        >
+                          Chi tiết
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
           ) : (
             <div className="bg-white p-8 rounded-2xl border border-gray-100 text-center space-y-3">
               <div className="w-16 h-16 bg-orange-50 text-orange-600 rounded-full flex items-center justify-center mx-auto text-3xl">
