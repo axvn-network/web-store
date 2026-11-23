@@ -1,0 +1,24 @@
+{
+  "request": {
+    "action": "create_category",
+    "payload": {
+      "name": "Tài Khoản Cloud & VPS",
+      "slug": "tai-khoan-cloud-vps",
+      "parentId": null,
+      "sortOrder": 1,
+      "isActive": true
+    }
+  },
+  "response": {
+    "success": true,
+    "data": {
+      "id": "cat-cloud-01",
+      "name": "Tài Khoản Cloud & VPS",
+      "nameVi": "Tài Khoản Cloud & VPS",
+      "slug": "tai-khoan-cloud-vps",
+      "parentId": null,
+      "sortOrder": 1,
+      "isActive": true
+    }
+  }
+}

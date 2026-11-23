@@ -1,0 +1,34 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: web-store-platform:latest
+    container_name: web-store-app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - DATABASE_URL=${DATABASE_URL:-file:./dev.db}
+      - DIRECT_URL=${DIRECT_URL:-}
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-digikash-secret-key-change-in-prod}
+      - CRON_SECRET=${CRON_SECRET:-digikash-cron-secret-2026}
+      - APP_URL=${APP_URL:-http://localhost:3000}
+      - SUPABASE_URL=${SUPABASE_URL:-}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-}
+      - THAPCAMMMO_API_KEY=${THAPCAMMMO_API_KEY:-fag_QP1koV6eCa-PP4f0ICZ_7WgUUmQmTjxd}
+      - HUPSMS_API_KEY=${HUPSMS_API_KEY:-hup_diU_B9nHS0KxWqKcYV7sBbdpoWgnV9y2TXnMTXgVOgBfRcMm}
+      - VUAVIA_API_KEY=${VUAVIA_API_KEY:-}
+      - TAIKHOAN_API_KEY=${TAIKHOAN_API_KEY:-}
+      - THANHPLUS_API_KEY=${THANHPLUS_API_KEY:-}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

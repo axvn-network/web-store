@@ -1,0 +1,23 @@
+{
+  "request": {
+    "action": "update_product_pricing",
+    "payload": {
+      "id": "tk-sp-4",
+      "customPrice": 45000,
+      "markupPercent": 50,
+      "status": "ACTIVE"
+    }
+  },
+  "response": {
+    "success": true,
+    "data": {
+      "id": "tk-sp-4",
+      "name": "VPS TRIAL 1 CORE - 1 RAM - 25GB SSD",
+      "costPrice": 30000,
+      "customPrice": 45000,
+      "markupPercent": 50,
+      "retailPrice": 45000,
+      "status": "ACTIVE"
+    }
+  }
+}

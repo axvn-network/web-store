@@ -1,0 +1,39 @@
+{
+  "request": {
+    "customer": {
+      "fullName": "Nguyễn Văn Test",
+      "phone": "0912345678",
+      "email": "testuser@gmail.com",
+      "address": "Số 1 Đại Cồ Việt, Hai Bà Trưng",
+      "province": "Hà Nội",
+      "district": "Hai Bà Trưng",
+      "note": "Kích hoạt tự động ngay sau thanh toán"
+    },
+    "items": [
+      {
+        "productId": "tk-sp-4",
+        "title": "VPS TRIAL 1 CORE - 1 RAM - 25GB SSD",
+        "price": 45000,
+        "quantity": 1,
+        "image": "https://images.unsplash.com/photo-1597852074816-d933c4d2b988?auto=format&fit=crop&w=600&q=80"
+      }
+    ],
+    "totalPrice": 45000,
+    "shippingFee": 0,
+    "finalTotal": 45000,
+    "paymentMethod": "VIETQR"
+  },
+  "response": {
+    "success": true,
+    "data": {
+      "id": "ord-test-123456",
+      "code": "BS2611-TEST1",
+      "customerName": "Nguyễn Văn Test",
+      "phone": "0912345678",
+      "finalTotal": 45000,
+      "status": "PENDING",
+      "statusText": "Chờ xác nhận",
+      "paymentMethod": "VIETQR"
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "status": "success",
+  "msg": "Lấy dữ liệu thành công!",
+  "data": {
+    "username": "hoangbom98",
+    "money": "1500000.00"
+  }
+}

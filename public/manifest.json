@@ -1,0 +1,26 @@
+{
+  "name": "BetaShop - Tổng Kho Đồ Gia Dụng & Nền Tảng Dịch Vụ Số",
+  "short_name": "BetaShop",
+  "description": "Nền tảng mua sắm đồ gia dụng chính hãng, dịch vụ số và tài khoản công nghệ đa nhà cung cấp",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#f53d2d",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["shopping", "productivity", "utilities"],
+  "lang": "vi-VN"
+}

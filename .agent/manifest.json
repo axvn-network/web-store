@@ -1,0 +1,23 @@
+{
+  "skills": [
+    {
+      "id": "ponytail",
+      "name": "Ponytail – Antigravity skill framework",
+      "path": "./ponytail",
+      "description": "Core skill system, audit, debt, gain, review helpers."
+    },
+    {
+      "id": "ui-ux-pro-max",
+      "name": "UI/UX Pro‑Max Skill Set",
+      "path": "./ui-ux-pro-max-skill",
+      "description": "High‑fidelity UI components, design‑review utilities, and CSS helpers."
+    },
+    {
+      "id": "ai-website-cloner",
+      "name": "AI Website Cloner Template",
+      "path": "./ai-website-cloner-template",
+      "description": "Scaffold for AI‑driven website cloning and generation."
+    }
+  ]
+}
+

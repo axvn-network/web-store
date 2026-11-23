@@ -1,0 +1,8 @@
+{
+  "status": "success",
+  "msg": "Mua hàng thành công!",
+  "trans_id": "TK98765432",
+  "data": [
+    "admin_vps_user|SecurePass2026!|2FA-SECRET-JBSWY3DPEHPK3PXP"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "mcpServers": {
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest"
+      ]
+    },
+    "chrome-devtools-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest"
+      ]
+    },
+    "watercrawl": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@watercrawl/mcp",
+        "--api-key",
+        "wc-dwfyfeeug51ca9eu4dlxmcgsyxm2y9w3",
+        "--base-url",
+        "https://app.watercrawl.dev"
+      ]
+    }
+  }
+}

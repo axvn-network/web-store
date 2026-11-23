@@ -1,0 +1,16 @@
+{
+  "status": "success",
+  "msg": "Lấy dữ liệu thành công!",
+  "product": [
+    {
+      "id": 4,
+      "name": "VPS TRIAL 1 CORE - 1 RAM - 25GB SSD",
+      "price": 30000,
+      "amount": 74,
+      "description": "Bảo hành 30 ngày, die đổi mới, Chọn LOCAL tại đây ạ: https://prnt.sc/PFiJBW_YR-WG",
+      "flag": null,
+      "min": 1,
+      "max": 1000000
+    }
+  ]
+}

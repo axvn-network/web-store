@@ -1,0 +1,16 @@
+name: Supabase Keep-Alive Pulse & Provider Health Cron
+
+on:
+  schedule:
+    # Runs at 00:00 and 12:00 UTC every day (twice daily) to keep Supabase awake and active
+    - cron: '0 0,12 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase Keep-Alive API Endpoint
+        run: |
+          echo "Pinging BetaShop Keep-Alive API..."
+          curl -s -f -m 30 "https://betashop-store.netlify.app/api/cron/keep-alive" || echo "Netlify pulse executed."

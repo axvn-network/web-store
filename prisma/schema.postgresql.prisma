@@ -1,0 +1,552 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -------------------------------------------------------------
+// 1. NGƯỜI DÙNG, NHÂN VIÊN & PHÂN QUYỀN (STAFF & RBAC)
+// -------------------------------------------------------------
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  name         String
+  phone        String?
+  avatar       String?
+  passwordHash String
+  roleId       String?
+  role         Role?         @relation(fields: [roleId], references: [id])
+  warehouseId  String?
+  warehouse    Warehouse?    @relation(fields: [warehouseId], references: [id])
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  activities   ActivityLog[]
+  orders       Order[]       @relation("StaffOrders")
+}
+
+model Role {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  code        String           @unique // SUPER_ADMIN, WAREHOUSE_MANAGER, CASHIER, ACCOUNTANT, CSKH
+  description String?
+  users       User[]
+  permissions RolePermission[]
+  createdAt   DateTime         @default(now())
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  code        String           @unique // e.g. products:view, products:create, inventory:import, orders:pos
+  module      String           // products, inventory, orders, customers, reports, settings
+  action      String           // view, create, edit, delete, approve, export
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  id           String     @id @default(uuid())
+  roleId       String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+// -------------------------------------------------------------
+// 2. DANH MỤC, THƯƠNG HIỆU, NHÀ CUNG CẤP & KHO HÀNG
+// -------------------------------------------------------------
+model Category {
+  id          String     @id @default(uuid())
+  name        String
+  nameVi      String
+  slug        String     @unique
+  description String?
+  image       String?
+  parentId    String?
+  parent      Category?  @relation("SubCategories", fields: [parentId], references: [id])
+  children    Category[] @relation("SubCategories")
+  products    Product[]
+  sortOrder   Int        @default(0)
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+}
+
+model Brand {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  slug        String    @unique
+  logo        String?
+  country     String?   // Việt Nam, Nhật Bản, Đức, Hàn Quốc, Hà Lan
+  description String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+}
+
+model Supplier {
+  id             String          @id @default(uuid())
+  code           String          @unique // NCC-001
+  name           String
+  phone          String
+  email          String?
+  address        String?
+  taxCode        String?
+  contactPerson  String?
+  totalImport    Int             @default(0)
+  totalPaid      Int             @default(0)
+  balanceDue     Int             @default(0) // Công nợ
+  rating         Float           @default(5.0)
+  note           String?
+  importVouchers ImportVoucher[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Warehouse {
+  id              String            @id @default(uuid())
+  code            String            @unique // KHO-HN, KHO-SG
+  name            String
+  address         String
+  phone           String?
+  managerName     String?
+  isDefault       Boolean           @default(false)
+  stocks          Stock[]
+  importVouchers  ImportVoucher[]
+  exportVouchers  ExportVoucher[]
+  fromTransfers   TransferVoucher[] @relation("TransferFrom")
+  toTransfers     TransferVoucher[] @relation("TransferTo")
+  adjustments     Adjustment[]
+  orders          Order[]
+  staffUsers      User[]
+  createdAt       DateTime          @default(now())
+}
+
+// -------------------------------------------------------------
+// 3. SẢN PHẨM & BIẾN THỂ GIA DỤNG
+// -------------------------------------------------------------
+model Product {
+  id              String           @id @default(uuid())
+  name            String
+  slug            String           @unique
+  barcode         String?          @unique
+  sku             String           @unique
+  shortDesc       String?
+  description     String?          // Rich text / Specs
+  specsJson       String?          // Key-value pairs JSON
+  unit            String           @default("Chiếc") // Chiếc, Bộ, Cái, Thùng
+  categoryId      String
+  category        Category         @relation(fields: [categoryId], references: [id])
+  brandId         String?
+  brand           Brand?           @relation(fields: [brandId], references: [id])
+  thumbnail       String?
+  images          ProductImage[]
+  costPrice       Int              @default(0) // Giá nhập
+  retailPrice     Int              @default(0) // Giá bán lẻ
+  wholesalePrice  Int?             // Giá bán buôn
+  salePrice       Int?             // Giá khuyến mãi
+  vatPercent      Int              @default(10)
+  warrantyMonths  Int              @default(12)
+  warrantyType    String           @default("Chính hãng")
+  minStockAlert   Int              @default(5)
+  maxStockAlert   Int              @default(100)
+  allowNegative   Boolean          @default(false)
+  status          String           @default("ACTIVE") // ACTIVE, DRAFT, ARCHIVED
+  metaTitle       String?
+  metaDescription String?
+  soldCount       Int              @default(0)
+  rating          Float            @default(5.0)
+  isFeatured      Boolean          @default(false)
+  isNew           Boolean          @default(false)
+  variants        ProductVariant[]
+  reviews         Review[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model ProductImage {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  isPrimary Boolean  @default(false)
+  sortOrder Int      @default(0)
+}
+
+model ProductVariant {
+  id             String          @id @default(uuid())
+  productId      String
+  product        Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name           String          // e.g. "1.8L - Đỏ - 220V"
+  sku            String          @unique
+  barcode        String?
+  capacity       String?         // 1.2L, 1.8L, 5L
+  power          String?         // 500W, 1000W
+  color          String?         // Đỏ, Đen, Inox, Bạc
+  voltage        String?         // 220V, 110V
+  controlType    String?         // Cơ, Điện tử
+  costPrice      Int?
+  retailPrice    Int
+  salePrice      Int?
+  stocks         Stock[]
+  orderItems     OrderItem[]
+  importItems    ImportItem[]
+  exportItems    ExportItem[]
+  transferItems  TransferItem[]
+  adjustmentItems AdjustmentItem[]
+  returnItems    ReturnItem[]
+  createdAt      DateTime        @default(now())
+}
+
+// -------------------------------------------------------------
+// 4. QUẢN LÝ KHO (INVENTORY & MOVEMENT)
+// -------------------------------------------------------------
+model Stock {
+  id          String         @id @default(uuid())
+  variantId   String
+  variant     ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  warehouseId String
+  warehouse   Warehouse      @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  quantity    Int            @default(0) // Tồn kho thực tế
+  reserved    Int            @default(0) // Đang giữ đơn
+  available   Int            @default(0) // Sẵn sàng bán = quantity - reserved
+  updatedAt   DateTime       @updatedAt
+
+  @@unique([variantId, warehouseId])
+}
+
+model StockMovement {
+  id          String   @id @default(uuid())
+  movementNo  String   @unique
+  variantId   String
+  warehouseId String
+  type        String   // IMPORT, EXPORT, TRANSFER, ADJUSTMENT, SALE, RETURN
+  refDocType  String   // ImportVoucher, ExportVoucher, TransferVoucher, Adjustment, Order, Return
+  refDocId    String   // ID or Code of document
+  quantity    Int      // Positive or negative
+  stockBefore Int
+  stockAfter  Int
+  performedBy String?
+  note        String?
+  createdAt   DateTime @default(now())
+}
+
+// 4.1 Phiếu Nhập Kho
+model ImportVoucher {
+  id            String       @id @default(uuid())
+  code          String       @unique // PNK-202611-001
+  supplierId    String
+  supplier      Supplier     @relation(fields: [supplierId], references: [id])
+  warehouseId   String
+  warehouse     Warehouse    @relation(fields: [warehouseId], references: [id])
+  invoiceNumber String?
+  importDate    DateTime     @default(now())
+  status        String       @default("COMPLETED") // DRAFT, PENDING, COMPLETED, CANCELLED
+  subtotal      Int          @default(0)
+  discount      Int          @default(0)
+  vatAmount     Int          @default(0)
+  totalAmount   Int          @default(0)
+  paidAmount    Int          @default(0)
+  debtAmount    Int          @default(0)
+  note          String?
+  createdBy     String?
+  items         ImportItem[]
+  createdAt     DateTime     @default(now())
+}
+
+model ImportItem {
+  id              String         @id @default(uuid())
+  importVoucherId String
+  importVoucher   ImportVoucher  @relation(fields: [importVoucherId], references: [id], onDelete: Cascade)
+  variantId       String
+  variant         ProductVariant @relation(fields: [variantId], references: [id])
+  quantity        Int
+  costPrice       Int
+  discount        Int            @default(0)
+  total           Int
+}
+
+// 4.2 Phiếu Xuất Kho
+model ExportVoucher {
+  id          String       @id @default(uuid())
+  code        String       @unique // PXK-202611-001
+  warehouseId String
+  warehouse   Warehouse    @relation(fields: [warehouseId], references: [id])
+  reason      String       // SALE, DEFECT, RETURN_SUPPLIER, INTERNAL_USE
+  status      String       @default("COMPLETED")
+  exportDate  DateTime     @default(now())
+  note        String?
+  createdBy   String?
+  items       ExportItem[]
+  createdAt   DateTime     @default(now())
+}
+
+model ExportItem {
+  id              String         @id @default(uuid())
+  exportVoucherId String
+  exportVoucher   ExportVoucher  @relation(fields: [exportVoucherId], references: [id], onDelete: Cascade)
+  variantId       String
+  variant         ProductVariant @relation(fields: [variantId], references: [id])
+  quantity        Int
+  unitPrice       Int
+  total           Int
+}
+
+// 4.3 Phiếu Chuyển Kho
+model TransferVoucher {
+  id              String         @id @default(uuid())
+  code            String         @unique // PCK-202611-001
+  fromWarehouseId String
+  fromWarehouse   Warehouse      @relation("TransferFrom", fields: [fromWarehouseId], references: [id])
+  toWarehouseId   String
+  toWarehouse     Warehouse      @relation("TransferTo", fields: [toWarehouseId], references: [id])
+  status          String         @default("COMPLETED") // PENDING_DISPATCH, IN_TRANSIT, RECEIVED, CANCELLED
+  transferDate    DateTime       @default(now())
+  receivedDate    DateTime?
+  createdBy       String?
+  receivedBy      String?
+  note            String?
+  items           TransferItem[]
+  createdAt       DateTime       @default(now())
+}
+
+model TransferItem {
+  id                String          @id @default(uuid())
+  transferVoucherId String
+  transferVoucher   TransferVoucher @relation(fields: [transferVoucherId], references: [id], onDelete: Cascade)
+  variantId         String
+  variant           ProductVariant  @relation(fields: [variantId], references: [id])
+  quantity          Int
+}
+
+// 4.4 Điều Chỉnh Kiểm Kê
+model Adjustment {
+  id          String           @id @default(uuid())
+  code        String           @unique // PKK-202611-001
+  warehouseId String
+  warehouse   Warehouse        @relation(fields: [warehouseId], references: [id])
+  reason      String           // PERIODIC_CHECK, BROKEN, LOST, DIFFERENCE
+  status      String           @default("COMPLETED")
+  auditDate   DateTime         @default(now())
+  createdBy   String?
+  note        String?
+  items       AdjustmentItem[]
+  createdAt   DateTime         @default(now())
+}
+
+model AdjustmentItem {
+  id           String         @id @default(uuid())
+  adjustmentId String
+  adjustment   Adjustment     @relation(fields: [adjustmentId], references: [id], onDelete: Cascade)
+  variantId    String
+  variant      ProductVariant @relation(fields: [variantId], references: [id])
+  bookQuantity Int            // Tồn sổ sách
+  realQuantity Int            // Tồn thực tế
+  diffQuantity Int            // Chênh lệch (real - book)
+  note         String?
+}
+
+// -------------------------------------------------------------
+// 5. ĐƠN HÀNG, POS & ĐỔI TRẢ (ORDERS & RETURNS)
+// -------------------------------------------------------------
+model Order {
+  id              String      @id @default(uuid())
+  code            String      @unique // BS2611-AB123
+  orderType       String      @default("ONLINE") // ONLINE, POS
+  warehouseId     String?
+  warehouse       Warehouse?  @relation(fields: [warehouseId], references: [id])
+  staffId         String?
+  staff           User?       @relation("StaffOrders", fields: [staffId], references: [id])
+  customerId      String?
+  customer        Customer?   @relation(fields: [customerId], references: [id])
+  customerName    String
+  customerPhone   String
+  customerEmail   String?
+  shippingAddress String
+  province        String?
+  district        String?
+  status          String      @default("PENDING") // PENDING, CONFIRMED, PACKING, SHIPPING, COMPLETED, CANCELLED, RETURNED
+  paymentMethod   String      @default("COD")     // COD, VIETQR, CASH, CARD, MOMO, VNPAY
+  paymentStatus   String      @default("UNPAID")  // UNPAID, PARTIAL, PAID
+  subtotal        Int         @default(0)
+  shippingFee     Int         @default(0)
+  discountAmount  Int         @default(0)
+  couponCode      String?
+  finalTotal      Int         @default(0)
+  amountReceived  Int         @default(0) // Cho POS
+  changeReturned  Int         @default(0) // Cho POS
+  note            String?
+  internalNote    String?
+  items           OrderItem[]
+  returns         Return[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String         @id @default(uuid())
+  orderId   String
+  order     Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variantId String
+  variant   ProductVariant @relation(fields: [variantId], references: [id])
+  title     String
+  price     Int
+  quantity  Int
+  total     Int
+}
+
+model Return {
+  id           String       @id @default(uuid())
+  code         String       @unique // PTH-202611-001
+  orderId      String
+  order        Order        @relation(fields: [orderId], references: [id])
+  reason       String       // DEFECT, WRONG_ITEM, CUSTOMER_CHANGE, DAMAGED_TRANSIT
+  refundMethod String       @default("CASH") // CASH, BANK_TRANSFER, VOUCHER
+  refundAmount Int          @default(0)
+  status       String       @default("COMPLETED") // PENDING, COMPLETED, REJECTED
+  restockType  String       @default("RESTOCK_USABLE") // RESTOCK_USABLE, MOVE_TO_DEFECT
+  createdBy    String?
+  note         String?
+  items        ReturnItem[]
+  createdAt    DateTime     @default(now())
+}
+
+model ReturnItem {
+  id        String         @id @default(uuid())
+  returnId  String
+  returnDoc Return         @relation(fields: [returnId], references: [id], onDelete: Cascade)
+  variantId String
+  variant   ProductVariant @relation(fields: [variantId], references: [id])
+  quantity  Int
+  price     Int
+  total     Int
+}
+
+// -------------------------------------------------------------
+// 6. KHÁCH HÀNG & CRM
+// -------------------------------------------------------------
+model Customer {
+  id          String            @id @default(uuid())
+  code        String            @unique // KH-001
+  name        String
+  phone       String            @unique
+  email       String?
+  rank        String            @default("NEW") // NEW, REGULAR, VIP, BLACKLIST
+  totalSpent  Int               @default(0)
+  orderCount  Int               @default(0)
+  points      Int               @default(0)
+  debtAmount  Int               @default(0)
+  notes       String?
+  addresses   CustomerAddress[]
+  orders      Order[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model CustomerAddress {
+  id         String   @id @default(uuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  receiver   String
+  phone      String
+  address    String
+  province   String
+  district   String
+  isDefault  Boolean  @default(false)
+}
+
+// -------------------------------------------------------------
+// 7. KHUYẾN MÃI, COUPON & VẬN CHUYỂN
+// -------------------------------------------------------------
+model Coupon {
+  id           String    @id @default(uuid())
+  code         String    @unique // WELCOME10, SALE50K
+  type         String    // PERCENT, FIXED
+  value        Int
+  minOrder     Int       @default(0)
+  maxDiscount  Int?
+  usageLimit   Int?
+  usedCount    Int       @default(0)
+  startDate    DateTime  @default(now())
+  endDate      DateTime?
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+}
+
+model Promotion {
+  id          String    @id @default(uuid())
+  name        String
+  type        String    // FLASH_SALE, COMBO, BUY_X_GET_Y
+  discount    Int       @default(0)
+  startDate   DateTime  @default(now())
+  endDate     DateTime?
+  isActive    Boolean   @default(true)
+  description String?
+}
+
+model ShippingZone {
+  id         String         @id @default(uuid())
+  name       String         // Nội thành Hà Nội, Miền Bắc, Miền Nam
+  provinces  String         // JSON array of province names
+  rates      ShippingRate[]
+  isActive   Boolean        @default(true)
+}
+
+model ShippingRate {
+  id             String       @id @default(uuid())
+  zoneId         String
+  zone           ShippingZone @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  title          String       // Giao nhanh 2h, Tiêu chuẩn
+  fee            Int          @default(0)
+  freeThreshold  Int?         // Miễn phí từ đơn X đồng
+}
+
+// -------------------------------------------------------------
+// 8. ĐÁNH GIÁ, THÔNG BÁO, CÀI ĐẶT & NHẬT KÝ
+// -------------------------------------------------------------
+model Review {
+  id         String   @id @default(uuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  authorName String
+  phone      String?
+  rating     Int      @default(5)
+  comment    String
+  images     String?  // JSON array of URLs
+  status     String   @default("APPROVED") // PENDING, APPROVED, REJECTED
+  reply      String?
+  createdAt  DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  type      String   // ORDER_NEW, LOW_STOCK, DEBT_DUE, SYSTEM
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  userName  String
+  action    String   // CREATE, UPDATE, DELETE, EXPORT, APPROVE
+  module    String   // PRODUCTS, ORDERS, INVENTORY, SETTINGS
+  details   String
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
+
+model Setting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  group     String   // GENERAL, PAYMENT, SHIPPING, TAX, NOTIFICATION
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

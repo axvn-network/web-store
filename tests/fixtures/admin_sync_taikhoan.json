@@ -1,0 +1,15 @@
+{
+  "request": {
+    "action": "sync_taikhoan",
+    "payload": {
+      "markupPercent": 25,
+      "autoPublish": true
+    }
+  },
+  "response": {
+    "success": true,
+    "syncedCategories": 5,
+    "syncedProducts": 14,
+    "message": "Đồng bộ danh mục và sản phẩm từ TaiKhoan.site thành công!"
+  }
+}

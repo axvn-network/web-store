@@ -1,0 +1,84 @@
+{
+  "status": "success",
+  "msg": "Lấy dữ liệu thành công!",
+  "categories": [
+    {
+      "id": "1",
+      "parent_id": 0,
+      "name": "ACCOUNT",
+      "icon": "https://taikhoan.site/assets/storage/images/iconZQCL.png",
+      "products": []
+    },
+    {
+      "id": "2",
+      "parent_id": 0,
+      "name": "VPS-SERVER",
+      "icon": "https://taikhoan.site/assets/storage/images/icon6V8B.png",
+      "products": []
+    },
+    {
+      "id": "18",
+      "parent_id": 1,
+      "name": "KAMATERA FREE 100$",
+      "icon": "https://taikhoan.site/assets/storage/images/icon9RIG.png",
+      "products": [
+        {
+          "id": "55",
+          "name": "KAMATERA FREE 100$ - Nạp Sẵn 10$ Trong Acc",
+          "price": "120000",
+          "amount": 25,
+          "description": "Có Thể Tạo đc 2 Vps 4-6 Cpu. Hàng Reg Thẻ Nạp Sẵn 10$ Trong Acc. Bảo Hành 1H Từ Lúc Mua.",
+          "flag": null,
+          "min": "1",
+          "max": "1000000"
+        }
+      ]
+    },
+    {
+      "id": "5",
+      "parent_id": 1,
+      "name": "AWS",
+      "icon": "https://taikhoan.site/assets/storage/images/iconDVGJ.png",
+      "products": [
+        {
+          "id": "1",
+          "name": "Aws 5Vcpu chưa kích limit",
+          "price": "129000",
+          "amount": 10,
+          "description": "Bảo hành login lần đầu tiên",
+          "flag": "VN",
+          "min": "1",
+          "max": "1000000"
+        },
+        {
+          "id": "11",
+          "name": "AWS 32Vcpu",
+          "price": "199000",
+          "amount": 0,
+          "description": "Bảo hành login 24h",
+          "flag": null,
+          "min": "1",
+          "max": "1000000"
+        }
+      ]
+    },
+    {
+      "id": "6",
+      "parent_id": 2,
+      "name": "VPS TRIAL",
+      "icon": "https://taikhoan.site/assets/storage/images/icon6V8B.png",
+      "products": [
+        {
+          "id": "4",
+          "name": "VPS TRIAL 1 CORE - 1 RAM - 25GB SSD",
+          "price": "30000",
+          "amount": 74,
+          "description": "Bảo hành 30 ngày, die đổi mới.",
+          "flag": null,
+          "min": "1",
+          "max": "1000000"
+        }
+      ]
+    }
+  ]
+}
